@@ -1,6 +1,7 @@
 import type { UserIdentity } from '../types/identity.js'
 import type { AuthConfig } from '../config/schemas.js'
 import { getStaticKeysForAuth } from './oauth-config.js'
+import { isDemoMode } from './demo-mode.js'
 
 export function extractBearerToken(authHeader: string | undefined): string | null {
   if (!authHeader) return null
@@ -28,6 +29,11 @@ export function resolveIdentity(
   authHeader: string | undefined,
   authConfig: AuthConfig
 ): UserIdentity {
+  // DEMO MODE: always return anonymous identity
+  if (isDemoMode()) {
+    return { sub: 'anonymous', roles: [] }
+  }
+
   const token = extractBearerToken(authHeader)
   const staticKeys = getStaticKeysForAuth(authConfig)
   const persistedIdentity = staticKeys ? resolveStaticKeyFromMap(token, staticKeys) : null

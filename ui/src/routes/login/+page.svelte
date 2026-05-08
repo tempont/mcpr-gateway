@@ -11,6 +11,9 @@
   let configReady = $state(false);
   let error = $state('');
   let loading = $state(false);
+  let demoModeActive = $state(false);
+  let demoUser = $state('');
+  let demoPassword = $state('');
 
   onMount(async () => {
     try {
@@ -20,6 +23,20 @@
       // Fallback: assume password required (server unreachable or pre-change gateway).
     } finally {
       configReady = true;
+    }
+
+    try {
+      const res = await fetch('/api/demo-status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.demoMode) {
+          demoModeActive = true;
+          demoUser = data.demoUser || 'demo';
+          demoPassword = data.demoPassword || 'demo';
+        }
+      }
+    } catch {
+      // fail-safe: no banner if fetch fails
     }
   });
 
@@ -61,6 +78,18 @@
       <h1 class="text-xl font-semibold text-slate-900 dark:text-white">MCPR Gateway</h1>
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Admin Console</p>
     </div>
+
+    {#if demoModeActive}
+      <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-center">
+        <p class="text-sm font-medium text-amber-800">🔑 Demo Credentials</p>
+        <p class="mt-1 font-mono text-xs text-amber-700">
+          Username: <span class="font-bold select-all">{demoUser}</span>
+        </p>
+        <p class="font-mono text-xs text-amber-700">
+          Password: <span class="font-bold select-all">{demoPassword}</span>
+        </p>
+      </div>
+    {/if}
 
     <!-- Form -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">

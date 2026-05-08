@@ -8,6 +8,7 @@
   import Sidebar from '../components/layout/Sidebar.svelte';
   import Header from '../components/layout/Header.svelte';
   import Toast from '../components/ui/Toast.svelte';
+  import DemoModeBanner from '../components/ui/DemoModeBanner.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -17,10 +18,22 @@
 
   let isLoginPage = $derived($page.url.pathname === `${base}/login` || $page.url.pathname === `${base}/`);
   let authChecked = $state(false);
+  let demoModeActive = $state(false);
 
   onMount(async () => {
     await auth.check();
     authChecked = true;
+
+    // Fetch demo mode status — fail-safe: if fetch fails, no banner
+    try {
+      const res = await fetch('/api/demo-status');
+      if (res.ok) {
+        const data: { demoMode: boolean } = await res.json();
+        demoModeActive = data.demoMode === true;
+      }
+    } catch {
+      // Network error or non-200 — stay safe, no banner
+    }
   });
 
   // Layout `onMount` only runs once; pathname-driven redirects must react to client navigations
@@ -38,6 +51,8 @@
     }
   });
 </script>
+
+<DemoModeBanner visible={demoModeActive} />
 
 {#if !authChecked}
   <div class="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
