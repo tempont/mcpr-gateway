@@ -3,6 +3,7 @@ import type { UserIdentity } from '../types/identity.js'
 import { getInboundOAuth, getStaticKeysForAuth, oauthAppliesToNamespace } from './oauth-config.js'
 import { getOAuthJwtValidator } from './oauth-validator.js'
 import { extractBearerToken, resolveStaticKeyFromMap } from './service.js'
+import { isDemoMode } from './demo-mode.js'
 
 export type McpIdentityResult =
   | { kind: 'identity'; identity: UserIdentity }
@@ -19,6 +20,11 @@ export async function resolveMcpIdentityForInitialize(
   configuredNamespaceKeys: Set<string>,
   requestOrigin?: string,
 ): Promise<McpIdentityResult> {
+  // DEMO MODE: always resolve as anonymous
+  if (isDemoMode()) {
+    return { kind: 'identity', identity: { sub: 'anonymous', roles: [] } }
+  }
+
   const token = extractBearerToken(authHeader)
   const staticKeys = getStaticKeysForAuth(auth)
 
@@ -62,6 +68,11 @@ export async function assertMcpSessionOAuthBearer(
   configuredNamespaceKeys: Set<string>,
   requestOrigin?: string,
 ): Promise<'ok' | 'oauth_required' | 'oauth_invalid' | 'session_mismatch'> {
+  // DEMO MODE: always accept through OAuth bearer check
+  if (isDemoMode()) {
+    return 'ok'
+  }
+
   const oauth = getInboundOAuth(auth, requestOrigin)
   if (!oauth || !oauthAppliesToNamespace(oauth, namespace, configuredNamespaceKeys)) {
     return 'ok'

@@ -2,6 +2,7 @@ import { mkdirSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { setConfig } from './index.js'
 import type { GatewayConfig, BootstrapConfig, AdminConfig } from './loader.js'
+import { isDemoMode } from '../auth/demo-mode.js'
 import { createDefaultAdminConfig, mergeWithAdminConfig, toAdminConfig } from './loader.js'
 import type { IConfigRepository, ConfigVersionMeta } from '../repositories/config/interface.js'
 import type { DownstreamRegistry } from '../registry/registry.js'
@@ -74,6 +75,13 @@ export class RuntimeConfigManager {
   }
 
   async saveAdminConfig(config: AdminConfig, meta: ConfigVersionMeta): Promise<number> {
+    // ═══════════════════════════════════════════════════════════
+    // DEMO MODE: never persist config changes (multi-tenant isolation)
+    if (isDemoMode()) {
+      throw new Error('Config changes are not persisted in demo mode. Each demo session is isolated — config modifications are disabled to prevent cross-user interference.')
+    }
+    // ═══════════════════════════════════════════════════════════
+
     if (this.options.configRepo) {
       const version = await this.options.configRepo.save(config, meta)
       await this.applyResolvedConfig(mergeWithAdminConfig(this.bootstrap, config))

@@ -75,3 +75,4 @@ Thumbs.db
 # Agent instruction files at repo root (often symlinked or copied per machine)
 AGENTS.md
 CLAUDE.md
+.opencode
