@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { resolveIdentity } from '../../src/auth/service.js'
+import { setDemoMode } from '../../src/auth/demo-mode.js'
 
 describe('resolveIdentity', () => {
   it('resolves persisted bearer tokens from staticKeys', () => {
@@ -31,5 +32,22 @@ describe('resolveIdentity', () => {
     })
 
     expect(identity).toEqual({ sub: 'anonymous', roles: [] })
+  })
+
+  describe('demo mode', () => {
+    afterEach(() => {
+      setDemoMode(false)
+    })
+
+    it('DEMO_MODE=true always returns anonymous identity even with valid static key', () => {
+      setDemoMode(true)
+      const result = resolveIdentity('Bearer valid-token', {
+        mode: 'static_key',
+        staticKeys: {
+          'valid-token': { userId: 'admin', roles: ['admin'] },
+        },
+      })
+      expect(result).toEqual({ sub: 'anonymous', roles: [] })
+    })
   })
 })

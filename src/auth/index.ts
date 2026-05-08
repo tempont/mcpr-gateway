@@ -1,3 +1,4 @@
+export { isDemoMode } from './demo-mode.js'
 export { resolveIdentity, extractBearerToken, resolveStaticKeyFromMap } from './service.js'
 export {
   resolveMcpIdentityForInitialize,

@@ -47,6 +47,13 @@ export function hasValidDownstreamKey(value) {
 }
 
 export function validateRequiredStartEnv(env = process.env) {
+  const isDemoMode = String(env['DEMO_MODE'] || '').toLowerCase() === 'true'
+
+  if (isDemoMode) {
+    console.log('DEMO_MODE active — skipping admin credential validation')
+    return []
+  }
+
   const missing = []
 
   for (const [key, placeholder] of Object.entries(SECURITY_PLACEHOLDERS)) {

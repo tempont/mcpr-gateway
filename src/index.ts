@@ -33,8 +33,16 @@ import type { IAuditLogger, ISessionStore } from './types/interfaces.js'
 import type { IAuditRepository } from './repositories/audit/interface.js'
 import type { IConfigRepository } from './repositories/config/interface.js'
 import { downstreamAuthManager } from './registry/auth/index.js'
+import { setDemoMode } from './auth/demo-mode.js'
 
-const memoryBackend = process.env['SESSION_BACKEND'] === 'memory'
+// DEMO_MODE: safe public-demo mode — no disk writes, anonymous identity, no admin
+const isDemoMode = process.env['DEMO_MODE']?.toLowerCase() === 'true'
+
+if (isDemoMode && process.env['SESSION_BACKEND'] && process.env['SESSION_BACKEND'] !== 'memory') {
+  console.warn('[demo-mode] SESSION_BACKEND overridden to memory')
+}
+
+const memoryBackend = isDemoMode || process.env['SESSION_BACKEND'] === 'memory'
 
 /**
  * MCP **client** transport over stdio (stdin/stdout) is DISABLED for now — the gateway runs as HTTP only.
@@ -75,6 +83,27 @@ if (memoryBackend) {
 }
 
 export const app = buildServer({ logLevel: process.env['LOG_LEVEL'] ?? 'info' })
+
+setDemoMode(isDemoMode)
+
+if (isDemoMode) {
+  app.log.warn('[demo-mode] DEMO MODE ACTIVE — no data persisted, identities forced anonymous')
+}
+
+// Demo mode: set default admin credentials if not already configured
+if (isDemoMode) {
+  if (!process.env['ADMIN_TOKEN']) {
+    process.env['ADMIN_TOKEN'] = 'demo-mode-admin-token'
+    app.log.warn('[demo-mode] ADMIN_TOKEN not set — using default demo token')
+  }
+  if (!process.env['GATEWAY_ADMIN_USER']) {
+    process.env['GATEWAY_ADMIN_USER'] = 'demo'
+  }
+  if (!process.env['GATEWAY_ADMIN_PASSWORD']) {
+    process.env['GATEWAY_ADMIN_PASSWORD'] = 'demo'
+  }
+  app.log.info(`[demo-mode] Admin credentials: user="${process.env['GATEWAY_ADMIN_USER']}" password="${process.env['GATEWAY_ADMIN_PASSWORD']}"`)
+}
 
 const pinoAudit = new PinoAuditLogger(app.log)
 const auditLogger: IAuditLogger = auditRepoInstance
@@ -215,11 +244,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1)
   })
 
-  if (config.debug.enabled) {
+  if (config.debug.enabled && !isDemoMode) {
     app.register(debugRoutes, { store: activeStore, registry })
   }
 
   const enableAdminRoutes =
+    isDemoMode ||                    // ← always enable admin in demo mode
     config.debug.enabled ||
     Boolean(process.env['ADMIN_TOKEN']) ||
     process.env['NODE_ENV'] !== 'production'
@@ -233,11 +263,25 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     })
   }
 
-  app.register(embeddedOAuthRoutes, {
-    configManager: runtimeConfigManager,
-  })
+  if (!isDemoMode) {
+    app.register(embeddedOAuthRoutes, {
+      configManager: runtimeConfigManager,
+    })
+  }
 
   app.register(uiRoutes)
+
+  // Demo mode status endpoint — consumed by the WebUI to show a persistent banner
+  app.get('/api/demo-status', async (_req, reply) => {
+    const response: { demoMode: boolean; demoUser?: string; demoPassword?: string } = {
+      demoMode: isDemoMode,
+    }
+    if (isDemoMode) {
+      response.demoUser = process.env['GATEWAY_ADMIN_USER'] || 'demo'
+      response.demoPassword = process.env['GATEWAY_ADMIN_PASSWORD'] || 'demo'
+    }
+    return reply.send(response)
+  })
 
   const port = Number(process.env['PORT'] ?? 3000)
   const host = process.env['HOST'] ?? '127.0.0.1'
