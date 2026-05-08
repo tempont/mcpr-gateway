@@ -13,6 +13,8 @@
 
 > Some say MCP is dead, hopefully we can give it **CPR**.. 🥁
 
+<p align="center">| <a href="https://mcpr-gateway.onrender.com">Demo</a> |</p>
+
 ## Inspired by
 
 - [Anthropic's Code Execution](https://www.anthropic.com/engineering/code-execution-with-mcp?_hsmi=390282592)
@@ -22,11 +24,11 @@
 
 <div align="center">
 
-| Category                  | Feature                           | Status     |
-| ------------------------- | --------------------------------- | ---------- |
-| **🗄️ Database**           | SQLite Support                    | ✅         |
+| Category                  | Feature                           | Status    |
+|---------------------------|-----------------------------------|-----------|
+| **🗄️ Database**          | SQLite Support                    | ✅         |
 |                           | PostgreSQL Support                | ❌ Planned |
-| **🖥️ Interface & Admin**  | WebUI and Admin API               | ✅         |
+| **🖥️ Interface & Admin** | WebUI and Admin API               | ✅         |
 |                           | Active sessions management        | ✅         |
 |                           | Bootstrap file support            | ✅         |
 |                           | Config versioning & rollback      | ✅         |
@@ -50,7 +52,7 @@
 |                           | Health-aware tool ranking         | ✅         |
 |                           | Tool quarantining                 | ✅         |
 |                           | Server import preview             | ✅         |
-| **🛡️ Security**           | External idP + DCR OAuth          | ✅         |
+| **🛡️ Security**          | External idP + DCR OAuth          | ✅         |
 |                           | Bearer token per user/service     | ✅         |
 |                           | SSRF protection                   | ✅         |
 |                           | Shell injection prevention        | ✅         |
@@ -63,7 +65,7 @@
 |                           | Tool capability inference         | ✅         |
 |                           | Write/admin/unhealthy penalties   | ✅         |
 |                           | Successful pattern tracking       | ✅         |
-| **⚡ Resilience**         | Per-session rate limiting         | ✅         |
+| **⚡ Resilience**          | Per-session rate limiting         | ✅         |
 |                           | Per-user rate limiting            | ✅         |
 |                           | Per-downstream concurrency        | ✅         |
 |                           | Circuit breaker                   | ✅         |
@@ -88,7 +90,7 @@
 |                           | Permission Management             | ✅         |
 |                           | Bearer Token Management           | ✅         |
 |                           | Allowed OAuth providers           | ✅         |
-| **🏷️ Tool Trust**         | Risk levels (Low/Med/High)        | ✅         |
+| **🏷️ Tool Trust**        | Risk levels (Low/Med/High)        | ✅         |
 |                           | Source trust (Untrusted/Verified) | ✅         |
 |                           | Schema compression                | ✅         |
 | **🔍 Observability**      | Auto refresh tools                | ✅         |
@@ -107,7 +109,7 @@
 ## Operating Modes
 
 | Mode        | Tool Window                                         | Best For                               |
-| ----------- | --------------------------------------------------- | -------------------------------------- |
+|-------------|-----------------------------------------------------|----------------------------------------|
 | **Code**    | 2 tools only                                        | Auto orchestration in a JS sandbox     |
 | **Compat**  | 4 meta-tools                                        | Large tool sets, minimal context usage |
 | **Default** | All enabled downstream tools, filtered by namespace | Full transparency, small tool sets     |
@@ -193,7 +195,7 @@ App runs at `http://127.0.0.1:3000` (UI at `/ui/`). For development, use `npm ru
 #### Minimum security variables
 
 | Variable                         | Purpose                                         | Required                                |
-| -------------------------------- | ----------------------------------------------- | --------------------------------------- |
+|----------------------------------|-------------------------------------------------|-----------------------------------------|
 | `ADMIN_TOKEN`                    | Enables authentication on all `/admin/*` routes | Yes                                     |
 | `GATEWAY_ADMIN_USER`             | Username typed at the admin login               | Yes for production                      |
 | `GATEWAY_ADMIN_PASSWORD`         | Password typed at the admin login               | Yes                                     |
@@ -294,7 +296,7 @@ Send `Authorization: Bearer <token>` on every request. After `initialize`, inclu
 ### 🔐 Security
 
 | Concern                | Implementation                                                                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Client auth            | Bearer token per user/service, issued via Admin UI or `auth.staticKeys` in bootstrap                                                                                           |
 | Admin protection       | `ADMIN_TOKEN` enables login; `GATEWAY_ADMIN_USER` / `GATEWAY_ADMIN_PASSWORD` are the credentials; in `NODE_ENV=production` with no `ADMIN_TOKEN`, admin routes are not mounted |
 | Downstream credentials | AES-encrypted in SQLite when `DOWNSTREAM_AUTH_ENCRYPTION_KEY` is set                                                                                                           |
@@ -304,7 +306,7 @@ Send `Authorization: Bearer <token>` on every request. After `initialize`, inclu
 ### 🌐 Sessions & Transport
 
 | Topic          | Detail                                                                           |
-| -------------- | -------------------------------------------------------------------------------- |
+|----------------|----------------------------------------------------------------------------------|
 | Persistence    | SQLite (default) or in-memory (`SESSION_BACKEND=memory`)                         |
 | TTL            | 30 min default (`session.ttlSeconds = 1800`), automatic cleanup                  |
 | Transport      | HTTP-Streamable: `GET /mcp/:namespace` (SSE) + `POST /mcp/:namespace` (JSON-RPC) |
@@ -314,7 +316,7 @@ Send `Authorization: Bearer <token>` on every request. After `initialize`, inclu
 ### 🔌 Downstream Servers
 
 | Topic             | Detail                                                                  |
-| ----------------- | ----------------------------------------------------------------------- |
+|-------------------|-------------------------------------------------------------------------|
 | Transports        | `stdio` and `http` / streamable-HTTP                                    |
 | Auth options      | `none`, `bearer` (env var or inline), `oauth`                           |
 | Credentials       | Encrypted at rest; UI-managed via `/ui/servers`                         |
@@ -324,7 +326,7 @@ Send `Authorization: Bearer <token>` on every request. After `initialize`, inclu
 ### 🛡️ Role-Based Access Control
 
 | Concept   | Description                                                                  |
-| --------- | ---------------------------------------------------------------------------- |
+|-----------|------------------------------------------------------------------------------|
 | Namespace | Isolated access path — e.g. `/mcp/dev`, `/mcp/prod`, `/mcp/personal`         |
 | Role      | Maps a bearer token to one or more namespaces with allowed operating modes   |
 | Token     | Per-client Bearer token, issued via Admin UI and stored in SQLite            |
@@ -335,7 +337,7 @@ Send `Authorization: Bearer <token>` on every request. After `initialize`, inclu
 Served at `/ui/` — **SvelteKit 2 + TailwindCSS v4**. Requires admin login when `ADMIN_TOKEN` is set.
 
 | Panel          | Path             | What you can do                                                    |
-| -------------- | ---------------- | ------------------------------------------------------------------ |
+|----------------|------------------|--------------------------------------------------------------------|
 | Dashboard      | `/ui/`           | Session counts, server health overview                             |
 | Servers        | `/ui/servers`    | Add, edit, delete downstream servers; view health status           |
 | Sessions       | `/ui/sessions`   | Inspect active sessions; revoke individual sessions                |
@@ -348,7 +350,7 @@ Served at `/ui/` — **SvelteKit 2 + TailwindCSS v4**. Requires admin login when
 ### 📊 Audit & Observability
 
 | Topic        | Detail                                                                                         |
-| ------------ | ---------------------------------------------------------------------------------------------- |
+|--------------|------------------------------------------------------------------------------------------------|
 | Logging      | Pino structured logs to stdout; level set via `LOG_LEVEL` env var                              |
 | Audit trail  | SQLite-persisted per-event records; prunable by retention window (`AUDIT_RETENTION_DAYS`)      |
 | Audit events | `SessionCreated`, `ToolExecuted`, `ExecutionDenied`, `DownstreamMarkedUnhealthy`               |
@@ -357,7 +359,7 @@ Served at `/ui/` — **SvelteKit 2 + TailwindCSS v4**. Requires admin login when
 ### ⚡ Resilience
 
 | Feature                | Config key                 | Default                                       |
-| ---------------------- | -------------------------- | --------------------------------------------- |
+|------------------------|----------------------------|-----------------------------------------------|
 | Rate limiting          | `resilience.rateLimit.*`   | Per-session and per-user windows              |
 | Downstream concurrency | `resilience.concurrency.*` | Per-server cap                                |
 | Response timeout       | `resilience.timeoutMs`     | Configurable                                  |
@@ -381,14 +383,14 @@ npm run benchmark -- real --namespaces name_space1, name_space_2, ...
 `~10 common dev mcp servers` with `~30 tools total` (context7, tavily, etc)
 
 | Mode    | Retrieval recall@3 | MRR | E2E Success | Avg Tokens Loaded in Context | Reduction % |
-| ------- | ------------------ | --- | ----------- | ---------------------------- | ----------- |
+|---------|--------------------|-----|-------------|------------------------------|-------------|
 | code    | 1                  | 1   | 1           | 703.2                        | ~92%        |
 | default | 1                  | 1   | 1           | 9138.2                       | 0%          |
 
 **Scenario: real-usage on MCP Client**
 
 | Mode    | Tool invocations | Σ totalTokensEstimate | Σ HTTP responseTime (ms) |
-| ------- | ---------------- | --------------------- | ------------------------ |
+|---------|------------------|-----------------------|--------------------------|
 | code    | 3                | 2309                  | 11051.31                 |
 | compat  | 7                | 4470                  | 6707.00                  |
 | default | 4                | 3338                  | 9369.15                  |
@@ -402,7 +404,7 @@ npm run benchmark -- real --namespaces name_space1, name_space_2, ...
 ## 📚 Documentation
 
 | Guide                                      | Audience               | Contents                                                                     |
-| ------------------------------------------ | ---------------------- | ---------------------------------------------------------------------------- |
+|--------------------------------------------|------------------------|------------------------------------------------------------------------------|
 | [Getting Started](docs/GETTING-STARTED.md) | Operators, integrators | Dependencies, setup, MCP client flow, auth basics                            |
 | [Configuration](docs/CONFIGURATION.md)     | Operators              | `bootstrap.json`, selector publication, `CONFIG_PATH`, two-tier config model |
 | [Architecture](docs/ARCHITECTURE.md)       | Contributors           | Sessions, registry, selector, triggers, high-level flow                      |
